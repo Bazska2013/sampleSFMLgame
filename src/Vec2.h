@@ -29,6 +29,9 @@ public:
     [[nodiscard]] float dist(const Vec2& rhs) const;
     void normalize();
     [[nodiscard]] float length() const;
+    float angle(const Vec2 & rhs) const;
+
+    [[nodiscard]] Vec2 getVectorFromAngle(float angle) const;
 };
 
 

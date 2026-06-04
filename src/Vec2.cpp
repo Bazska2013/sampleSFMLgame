@@ -4,7 +4,10 @@
 
 #include "Vec2.h"
 
+#include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <ostream>
 
 Vec2::Vec2() = default;
 Vec2::Vec2(const float xin, const float yin) : x(xin), y(yin) {};
@@ -74,4 +77,12 @@ void Vec2::normalize() {
 
 float Vec2::length() const {
     return std::hypot(x, y);
+}
+
+float Vec2::angle(const Vec2 & rhs) const {
+    return std::atan2(rhs.y-y, rhs.x-x);
+}
+
+Vec2 Vec2::getVectorFromAngle(const float angle) const {
+    return {std::cos(angle), std::sin(angle)};
 }

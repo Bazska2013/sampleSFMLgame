@@ -47,6 +47,9 @@ class Game {
     void spawnBullet(const std::shared_ptr<Entity>& entity, const Vec2 & mousePos);
     void spawnSpecialWeapon(const std::shared_ptr<Entity>& entity);
 
+    static double getRandomFromRange(int min, int max);
+    static bool getRandomTrueOrFalse();
+
 public:
     explicit Game(const std::string & config);
 
