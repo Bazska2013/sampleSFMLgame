@@ -10,9 +10,6 @@
 EntityManager::EntityManager() = default;
 
 void EntityManager::update() {
-    // TODO: add entities from m_entitiesToAdd to the proper location(s)
-    // - add them to the vector of all entities
-    // - add them to the vector inside the map, with the tag as a key
 
     for (auto e : m_entitiesToAdd) {
         m_entities.push_back(e);
@@ -32,8 +29,6 @@ void EntityManager::update() {
 }
 
 void EntityManager::removeDeadEntities(EntityVec &vec) {
-    // TODO: remove all dead entities from the input vector
-    // this is called by the update() function
     vec.erase(
         std::remove_if(vec.begin(), vec.end(),
             [](const std::shared_ptr<Entity>& e) {

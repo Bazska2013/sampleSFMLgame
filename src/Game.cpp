@@ -12,8 +12,6 @@ Game::Game(const std::string & config) : m_text(m_font) {
 }
 
 void Game::init(const std::string & path) {
-    // TODO: read in config file here
-    // use the premade PlayerConfig, EnemyConfig, BulletConfig variables
     int windowWidth = 1280, windowHeight = 720, frameLimit = 60, fullScreen = 0;
 
     std::ifstream fin(path);
@@ -47,8 +45,6 @@ void Game::init(const std::string & path) {
         }
     }
 
-    // set up default window parameters
-
     m_window.create(sf::VideoMode({static_cast<unsigned>(windowWidth), static_cast<unsigned>(windowHeight)}), "SFML Game", fullScreen ? sf::State::Fullscreen : sf::State::Windowed);
     m_window.setFramerateLimit(frameLimit);
 
@@ -56,37 +52,27 @@ void Game::init(const std::string & path) {
 }
 
 void Game::run() {
-    // TODO: add pause functionality in here
-    // some system should function while paused (rendering)
-    // some systems shouldn't (movement / input)
 
     while (m_running) {
         m_entities.update();
-
-        sEnemySpawner();
-        sMovement();
-        sLifespan();
-        sCollision();
+        if (!m_paused) {
+            sEnemySpawner();
+            sMovement();
+            sLifespan();
+            sCollision();
+            m_currentFrame++;
+        }
         sUserInput();
         sRender();
-
-        // increment the current frame
-        // may need to be moved when pause implemented
-        m_currentFrame++;
     }
 }
 
-void Game::setPaused(bool paused) {
-
+void Game::setPaused(const bool paused) {
+    m_paused = paused;
 }
 
 // respawn the player in the middle of the screen
 void Game::spawnPlayer() {
-    // TODO: Finish adding all prperties of the player with the correct values from the config
-
-    // We create every entity by calling EntityManager.addEntity(tag)
-    // This returns a std::shared_ptr<Entity>, so we use 'auto' to save typing
-
     auto entity = m_entities.addEntity("player");
 
     // Give this entity a Transform so it spawns at (200, 200) with velocity (1, 1) and angle 0
@@ -104,9 +90,6 @@ void Game::spawnPlayer() {
 }
 
 void Game::spawnEnemy() {
-    // TODO: make sure the enemy is spawned properly with the m_enemyConfig variables
-    // the enemy must be spawned completely within the bounds of the window
-
     m_lastEnemySpawnTime = m_currentFrame;
     auto entity = m_entities.addEntity("enemy");
     const auto windowHeight = m_window.getSize().y;
@@ -117,13 +100,6 @@ void Game::spawnEnemy() {
 }
 
 void Game::spawnSmallEnemies(std::shared_ptr<Entity> e) {
-    // TODO: spawn small enemies at the location of the input enemy e
-
-    // when we create the smaller enemy, we have to read the values of the original enemy
-    // - spawn a number of small enemies equal to the vertices of the original enemy
-    // - set each small enemy to the same color as the original, half the size
-    // - small enemies are worth double points of the original enemy
-
     const auto vertices = e->cShape->circle.getPointCount();
     const float angleInRadians = 360/vertices * M_PI / 180.f;
 
@@ -138,9 +114,6 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> e) {
 
 // spawns a bullet from a given entry to a target location
 void Game::spawnBullet(const std::shared_ptr<Entity>& entity, const Vec2 & target) {
-    // TODO: implement the spawning of a bullet which travels toward target
-    // - bullet speed is given as a scalar speed
-    // - you must set the velocity by using formula in notes
 
     Vec2 targetVel = (target - entity->cTransform->pos);
     targetVel.normalize();
@@ -158,8 +131,6 @@ void Game::spawnSpecialWeapon(const std::shared_ptr<Entity>& entity) {
 }
 
 void Game::sMovement() {
-    // TODO: implement all entity movement in this function
-    // you should read the m_player->cInput component to determine if the player is moving
 
     m_player->cTransform->velocity.x = 0;
     m_player->cTransform->velocity.y = 0;
@@ -217,13 +188,6 @@ void Game::sMovement() {
 }
 
 void Game::sLifespan() {
-    // TODO: implement all lifespan functionality
-
-    // for all entities
-    // if entity has no lifespan component, skip it
-    // if entity has > 0 remaining lifespan, subtract 1
-    // if it has lifespan and is alive scale its alpha channel properly
-    // if it has lifespan and its time is up destroy the entity
 
     for (auto e : m_entities.getEntities()) {
         if (e->cLifespan) {
@@ -256,8 +220,6 @@ void Game::sLifespan() {
 }
 
 void Game::sCollision() {
-    // TODO: implement all proper collisions between entities
-    // be sure to use the collision radius, NOT the shape radius
     auto bullets = m_entities.getEntities("bullet");
     auto enemies = m_entities.getEntities("enemy");
     auto small_enemies = m_entities.getEntities("small_enemy");
@@ -297,7 +259,6 @@ void Game::sCollision() {
 }
 
 void Game::sEnemySpawner() {
-    // TODO: code which implements enemy spawning should go here
     if (m_currentFrame - m_lastEnemySpawnTime >= m_enemyConfig.SI) {
         spawnEnemy();
     }
@@ -306,12 +267,9 @@ void Game::sEnemySpawner() {
 }
 
 void Game::sRender() {
-    // TODO: change the code below to draw ALL of the entities
-    // sample drawing of the player Entity that we have created
     m_window.clear();
 
     m_player->cShape->circle.setPosition({m_player->cTransform->pos.x, m_player->cTransform->pos.y});
-    // set the roation of the shape based on the entity's transform->pos
     const sf::Angle a1 = sf::radians(m_player->cTransform->angle);
     m_player->cShape->circle.setRotation(a1);
 
@@ -340,13 +298,8 @@ void Game::sRender() {
 }
 
 void Game::sUserInput() {
-    // TODO: handle user input here
-    // note that you should only be setting the player's input component variables here
-    // you should not implement the player's movement logic here
-    // the movement system will read the variables you set in this function
 
     while (const std::optional event = m_window.pollEvent()) {
-        // this event triggers when the window is closed
         if (event->is<sf::Event::Closed>()) {
             m_running = false;
             m_window.close();
@@ -355,17 +308,26 @@ void Game::sUserInput() {
                 m_running = false;
                 m_window.close();
             }
-            if (keyPressed->scancode == sf::Keyboard::Scancode::W) {
-                m_player->cInput->up = true;
-            }
-            if (keyPressed->scancode == sf::Keyboard::Scancode::A) {
-                m_player->cInput->left = true;
-            }
-            if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
-                m_player->cInput->down = true;
-            }
-            if (keyPressed->scancode == sf::Keyboard::Scancode::D) {
-                m_player->cInput->right = true;
+            if (!m_paused) {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::W) {
+                    m_player->cInput->up = true;
+                }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::A) {
+                    m_player->cInput->left = true;
+                }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
+                    m_player->cInput->down = true;
+                }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::D) {
+                    m_player->cInput->right = true;
+                }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::P) {
+                    setPaused(true);
+                }
+            } else {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::P) {
+                    setPaused(false);
+                }
             }
         } else if (const auto* keyReleased = event->getIf<sf::Event::KeyReleased>()) {
             if (keyReleased->scancode == sf::Keyboard::Scancode::W) {
@@ -381,15 +343,18 @@ void Game::sUserInput() {
                 m_player->cInput->right = false;
             }
         } else if (const auto* mouseButtonPressed = event->getIf<sf::Event::MouseButtonPressed>()) {
-            if (mouseButtonPressed->button == sf::Mouse::Button::Left) {
-                spawnBullet(m_player, Vec2(mouseButtonPressed->position.x, mouseButtonPressed->position.y));
+            if (!m_paused) {
+                if (mouseButtonPressed->button == sf::Mouse::Button::Left) {
+                    spawnBullet(m_player, Vec2(mouseButtonPressed->position.x, mouseButtonPressed->position.y));
+                }
             }
         }
     }
 
-    sf::Vector2i localPosition = sf::Mouse::getPosition(m_window);
-    // std::cout << "Mouse position: (" << localPosition.x << ", " << localPosition.y << ")" << std::endl;
-    m_player->cTransform->angle = m_player->cTransform->pos.angle(Vec2(localPosition.x, localPosition.y));
+    if (!m_paused) {
+        sf::Vector2i localPosition = sf::Mouse::getPosition(m_window);
+        m_player->cTransform->angle = m_player->cTransform->pos.angle(Vec2(localPosition.x, localPosition.y));
+    }
 }
 
 double Game::getRandomFromRange(const int min, const int max) {
